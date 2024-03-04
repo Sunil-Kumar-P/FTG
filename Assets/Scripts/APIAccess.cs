@@ -1,58 +1,32 @@
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
-using System.Collections.Generic; // Added this line
 
 public class APIAccess : MonoBehaviour
 {
-    public string apiUrl = "http://127.0.0.1:8000/api/items/?format=api";
+    public string apiUrl = " http://localhost:3000/api/person"; // Replace with your actual API URL
 
-    void Start()
+    private IEnumerator Start()
     {
-        StartCoroutine(GetDataFromAPI());
+        yield return StartCoroutine(GetData());
     }
 
-    IEnumerator GetDataFromAPI()
+    private IEnumerator GetData()
     {
-        UnityWebRequest request = UnityWebRequest.Get(apiUrl);
-        yield return request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.Success)
+        using (UnityWebRequest request = UnityWebRequest.Get(apiUrl))
         {
-            string jsonResult = request.downloadHandler.text;
-            Debug.Log(jsonResult);
+            yield return request.SendWebRequest();
 
-            // Parse JSON and handle data
-            HandleJSON(jsonResult);
-        }
-        else
-        {
-            Debug.Log("Error: " + request.error);
-        }
-    }
-
-    void HandleJSON(string json)
-    {
-        List<Item> items = JsonUtility.FromJson<List<Item>>(json);
-
-        if (items != null)
-        {
-            foreach (Item item in items)
+            if (request.isNetworkError || request.isHttpError)
             {
-                Debug.Log("ID: " + item.id + ", Name: " + item.name + ", Description: " + item.description);
+                Debug.LogError("Error fetching data: " + request.error);
+            }
+            else
+            {
+                Debug.Log("success");
+
+                // Use the retrieved data in your game logic here
             }
         }
-        else
-        {
-            Debug.Log("Failed to parse JSON.");
-        }
     }
-}
-
-[System.Serializable]
-public class Item
-{
-    public int id;
-    public string name;
-    public string description;
 }
