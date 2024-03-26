@@ -5,6 +5,7 @@ using SimpleJSON;
 using UnityEngine.Networking;
 public class PlayerMove : MonoBehaviour
 {
+    
     public float moveSpeed = 3;
     public float leftRightSpeed = 10;
     public float jumpForce = 5; // Adjust as needed
@@ -22,7 +23,7 @@ public class PlayerMove : MonoBehaviour
         while (true)
         {
             yield return GetData();
-            yield return new WaitForSeconds(1f); // Adjust the interval as needed
+            yield return new WaitForSeconds(0.1f); // Adjust the interval as needed
         }
     }
      IEnumerator GetData()
@@ -176,7 +177,4 @@ public class PlayerMove : MonoBehaviour
             transform.Translate(Vector3.up * Time.deltaTime * jumpForce, Space.World);
         }
     }
-
-
-
 }
