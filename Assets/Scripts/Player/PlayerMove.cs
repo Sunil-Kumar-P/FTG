@@ -5,20 +5,26 @@ using SimpleJSON;
 using UnityEngine.Networking;
 public class PlayerMove : MonoBehaviour
 {
-    
-    public float moveSpeed = 3;
-    public float leftRightSpeed = 10;
+    public float moveSpeed = 25;
+    public float leftRightSpeed = 4;
+    static public bool canMove = false;
+    public bool isJumping = false;
+    public bool comingDown = false;
+    public GameObject playerObject;
+    // Start is called before the first frame update
+
     public float jumpForce = 5; // Adjust as needed
     private GameObject Player;
 
     public string apiUrl = "http://127.0.0.1:3000/api/playerposition"; // Replace with your actual API URL
     public string jsonResponse;
+
     void Start()
     {
         StartCoroutine(GetDataContinuously());
     }
 
-     IEnumerator GetDataContinuously()
+    IEnumerator GetDataContinuously()
     {
         while (true)
         {
@@ -26,7 +32,7 @@ public class PlayerMove : MonoBehaviour
             yield return new WaitForSeconds(0.1f); // Adjust the interval as needed
         }
     }
-     IEnumerator GetData()
+    IEnumerator GetData()
     {
         using (UnityWebRequest request = UnityWebRequest.Get(apiUrl))
         {
@@ -56,6 +62,8 @@ public class PlayerMove : MonoBehaviour
                     bool right = gridPositionNode["right"].AsBool;
                     bool center = gridPositionNode["center"].AsBool;
                     bool top = gridPositionNode["top"].AsBool;
+                    bool moving = gridPositionNode["moving"].AsBool;
+                    bool restart = gridPositionNode["restart"].AsBool;
                     // Move the player based on gridPosition data
                     if (left && !IsPlayerOnLeft())
                     {
@@ -77,6 +85,12 @@ public class PlayerMove : MonoBehaviour
                         PerformJump();
                         Debug.Log("top");
                     }
+                    if (moving)
+                    {
+                        transform.Translate(Vector3.forward * Time.deltaTime * moveSpeed, Space.World);
+
+                        Debug.Log("moving");
+                    }
                 }
                 else
                 {
@@ -85,7 +99,7 @@ public class PlayerMove : MonoBehaviour
             }
         }
     }
-     bool IsPlayerGrounded()
+    bool IsPlayerGrounded()
     {
         // Check if the player is grounded (e.g., touching the ground)
         return Physics.Raycast(transform.position, -Vector3.up, 0.1f);
@@ -93,10 +107,43 @@ public class PlayerMove : MonoBehaviour
 
     void PerformJump()
     {
-        // Perform a jump by applying a vertical velocity
-        // GetComponent<Rigidbody>().velocity = new Vector3(0, 5, 0);
-        transform.Translate(Vector3.up * Time.deltaTime * jumpForce, Space.World);
+        // Check if the player is already jumping or falling down
+        if (!isJumping && !comingDown)
+        {
+            // Apply an upward force for jumping
+            GetComponent<Rigidbody>().velocity = new Vector3(0, jumpForce, 0);
+
+            // Set jumping flag to true
+            isJumping = true;
+
+
+        }
     }
+    IEnumerator FallBackDown()
+    {
+        // Wait for a short delay before simulating falling back down
+        yield return new WaitForSeconds(0.5f); // Adjust as needed
+
+        // Set comingDown flag to true
+        comingDown = true;
+
+        // While the player is above the ground, simulate falling back down
+        while (!IsPlayerGrounded())
+        {
+            // Calculate the next position of the player by moving downwards
+            Vector3 nextPosition = transform.position - new Vector3(0, jumpForce * Time.deltaTime, 0);
+
+            // Move the player to the calculated position
+            GetComponent<Rigidbody>().MovePosition(nextPosition);
+
+            yield return null; // Wait for the next frame
+        }
+
+        // Once the player touches the ground, reset flags and stop falling
+        isJumping = false;
+        comingDown = false;
+    }
+
     bool IsPlayerOnLeft()
     {
         // Check if the player is on the left side
@@ -124,7 +171,7 @@ public class PlayerMove : MonoBehaviour
     void MovePlayerToRight()
     {
         // Move the player to the right
-          transform.position = new Vector3(1.5f, transform.position.y, transform.position.z);
+        transform.position = new Vector3(1.5f, transform.position.y, transform.position.z);
     }
 
     void MovePlayerToCenter()
@@ -146,10 +193,11 @@ public class PlayerMove : MonoBehaviour
         clampedPosition.z = Mathf.Clamp(clampedPosition.z, minZ, maxZ);
         transform.position = clampedPosition;
     }
+
+    // Update is called once per frame
     void Update()
     {
         // Move the player forward
-        transform.Translate(Vector3.forward * Time.deltaTime * moveSpeed, Space.World);
 
         // Move left
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
@@ -175,6 +223,11 @@ public class PlayerMove : MonoBehaviour
         if (Input.GetKey(KeyCode.W) || Input.GetKeyDown(KeyCode.Space))
         {
             transform.Translate(Vector3.up * Time.deltaTime * jumpForce, Space.World);
+        }
+
+        if (transform.position.y > 1)
+        {
+            FallBackDown();
         }
     }
 }

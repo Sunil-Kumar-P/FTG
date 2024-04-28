@@ -10,6 +10,6 @@ public class CollactableControl : MonoBehaviour
 
     void Update()
     {
-        coinCountDisplay.GetComponent<Text>().text = "" + coinCount;
+        
     }
 }
