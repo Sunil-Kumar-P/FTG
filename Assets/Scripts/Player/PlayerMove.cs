@@ -1,11 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using SimpleJSON;
 using UnityEngine.Networking;
+using System.Collections;
 public class PlayerMove : MonoBehaviour
 {
-    public float moveSpeed = 25;
+    public float moveSpeed = 40;
     public float leftRightSpeed = 4;
     static public bool canMove = false;
     public bool isJumping = false;
@@ -29,7 +29,7 @@ public class PlayerMove : MonoBehaviour
         while (true)
         {
             yield return GetData();
-            yield return new WaitForSeconds(0.1f); // Adjust the interval as needed
+            yield return new WaitForSeconds(0.01f); // Adjust the interval as needed
         }
     }
     IEnumerator GetData()
@@ -65,31 +65,39 @@ public class PlayerMove : MonoBehaviour
                     bool moving = gridPositionNode["moving"].AsBool;
                     bool restart = gridPositionNode["restart"].AsBool;
                     // Move the player based on gridPosition data
-                    if (left && !IsPlayerOnLeft())
+                    if (!GameOverCanvas.GameOver)
                     {
-                        MovePlayerToLeft();
-                        Debug.Log("left");
-                    }
-                    else if (right && !IsPlayerOnRight())
-                    {
-                        MovePlayerToRight();
-                        Debug.Log("Right");
-                    }
-                    else if (center && !IsPlayerInCenter())
-                    {
-                        MovePlayerToCenter();
-                        Debug.Log("center");
-                    }
-                    if (IsPlayerGrounded() && top)
-                    {
-                        PerformJump();
-                        Debug.Log("top");
-                    }
-                    if (moving)
-                    {
-                        transform.Translate(Vector3.forward * Time.deltaTime * moveSpeed, Space.World);
+                        if (left && !IsPlayerOnLeft())
+                        {
+                            MovePlayerToLeft();
+                            // Debug.Log("left");
+                        }
+                        else if (right && !IsPlayerOnRight())
+                        {
+                            MovePlayerToRight();
+                            // Debug.Log("Right");
+                        }
+                        else if (center && !IsPlayerInCenter())
+                        {
+                            MovePlayerToCenter();
+                            // Debug.Log("center");
+                        }
+                        if (IsPlayerGrounded() && top)
+                        {
+                            PerformJump();
+                            // Debug.Log("top");
+                        }
 
-                        Debug.Log("moving");
+                        if (moving)
+                        {
+                            transform.Translate(Vector3.forward * Time.deltaTime * moveSpeed, Space.World);
+
+                            Debug.Log("moving");
+                        }
+                    }
+                    if (restart)
+                    {
+                        GameOverCanvas.RestartGame();
                     }
                 }
                 else
@@ -165,13 +173,13 @@ public class PlayerMove : MonoBehaviour
     void MovePlayerToLeft()
     {
         // Move the player to the left
-        transform.position = new Vector3(-1.5f, transform.position.y, transform.position.z);
+        transform.position = new Vector3(-1.8f, transform.position.y, transform.position.z);
     }
 
     void MovePlayerToRight()
     {
         // Move the player to the right
-        transform.position = new Vector3(1.5f, transform.position.y, transform.position.z);
+        transform.position = new Vector3(1.8f, transform.position.y, transform.position.z);
     }
 
     void MovePlayerToCenter()
@@ -193,6 +201,8 @@ public class PlayerMove : MonoBehaviour
         clampedPosition.z = Mathf.Clamp(clampedPosition.z, minZ, maxZ);
         transform.position = clampedPosition;
     }
+
+
 
     // Update is called once per frame
     void Update()
@@ -228,6 +238,11 @@ public class PlayerMove : MonoBehaviour
         if (transform.position.y > 1)
         {
             FallBackDown();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            GameOverCanvas.RestartGame();
         }
     }
 }
