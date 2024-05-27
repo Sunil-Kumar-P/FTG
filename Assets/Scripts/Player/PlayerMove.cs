@@ -16,9 +16,13 @@ public class PlayerMove : MonoBehaviour
     public float jumpForce = 5; // Adjust as needed
     private GameObject Player;
 
-    public string apiUrl = "http://127.0.0.1:3000/api/playerposition"; // Replace with your actual API URL
+    public string apiUrl = "https://ftgapi.onrender.com:3000/api/playerposition"; // Replace with your actual API URL
     public string jsonResponse;
-
+    public void UpdateApiUrl(string newApiUrl)
+    {
+        apiUrl = newApiUrl;
+        Debug.Log("API URL updated to: " + apiUrl);
+    }
     void Start()
     {
         StartCoroutine(GetDataContinuously());
